@@ -23,11 +23,11 @@ sig Operator extends User
 sig Car
 {
 	driver: lone User,
-	actualPosition: one Position
-	batteryLevel: one int
+	actualPosition: one Position,
+	batteryLevel: one Int
 }
 {
-	batteryLevel >= 0 and batteryLevel <= 100,
+	batteryLevel >= 0 and batteryLevel <= 100
 }
 
 sig SafeArea
@@ -37,11 +37,11 @@ sig SafeArea
 
 sig ChargingArea extends SafeArea
 {
-	numberOfPlugs: one int,
+	numberOfPlugs: one Int,
 	chargingCars: set Car
 }
 {
-	numberOfPlugs > 0,
+	numberOfPlugs > 0 and
 	#chargingCars <= numberOfPlugs
 }
 
@@ -50,8 +50,28 @@ sig Reservation
 	client: one Client,
 	reservedCar: one Car,
 	time: one DateTime,
+	expirationFee: lone Payment
 }
 
 sig Ride
 {
+	startTime: one DateTime,
+	finishTime: one DateTime,
+	reservation: one Reservation,
+	passengers: one Int,
+	payment: one Payment
+}
+{
+	passengers >= 0 and passengers <= 4
+}
+
+sig Payment
+{
+	charge: one float,
+	dateTime: one DateTime
+}
+
+fact payOnlyReservationFeeOrRide
+{
+	no p: Payment | some re: Reservation, ri : Ride | re.payment = p and ri.reservation = re
 }
