@@ -1,7 +1,7 @@
 sig Position
 {
-	latitude: one float,
-	longitude: one float
+	latitude: one Int,	//should be float
+	longitude: one Int	//should be float
 }
 
 abstract sig User
@@ -14,6 +14,11 @@ abstract sig User
 	actualPosition: one Position
 }
 
+fact emailIsUnique
+{
+	all u1,u2: User | (u1!=u2)=> u1.email != u2.email
+}
+
 sig Client extends User
 {}
 
@@ -24,10 +29,16 @@ sig Car
 {
 	driver: lone User,
 	actualPosition: one Position,
+	code: one Int,
 	batteryLevel: one Int
 }
 {
 	batteryLevel >= 0 and batteryLevel <= 100
+}
+
+fact codesOfTheCarsAreUnique
+{
+	all c1, c2: Car | (c1!=c2)=>c1.code!=c2.code
 }
 
 sig SafeArea
@@ -55,6 +66,7 @@ sig Reservation
 
 sig Ride
 {
+	client: one Client,
 	startTime: one DateTime,
 	finishTime: one DateTime,
 	reservation: one Reservation,
@@ -67,11 +79,18 @@ sig Ride
 
 sig Payment
 {
-	charge: one float,
+	charge: one Int, //should be float
+	client: one Client,
 	dateTime: one DateTime
 }
 
 fact payOnlyReservationFeeOrRide
 {
 	no p: Payment | some re: Reservation, ri : Ride | re.payment = p and ri.reservation = re
+}
+
+fact userWhoReservesPays
+{
+	all ri:Ride | ri.payment.client = ri.client,
+	all re:Reservation | re.expirationFee.client = re.client
 }
