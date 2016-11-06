@@ -84,6 +84,38 @@ sig Payment
 	dateTime: one DateTime
 }
 
+sig DateTime
+{
+	second: one Int,
+	minute: one Int,
+	hour: one Int,
+	day: one Int,
+	month: one Int,
+	year: one Int
+}
+{
+	
+	( 0 <= second and second <= 59) and
+	( 0 <= minute and minute <= 59) and
+	( 0 <= hour and hour <= 23) and
+	( 1 <= day) and
+	( 1 <= month and month <= 12) and
+	( ( ( month = 11 or month = 4 or month = 6 or moth = 9 ) implies day <= 30) and
+		( ( month = 1 or month = 3 or month = 5 or moth = 7 or month = 8 or month = 10 or month = 12 ) implies day <= 31 ) and
+		( (month = 2 and year % 4 != 0 ) implies day <= 28 ) and
+		((month = 2 and year % 4 = 0) implies day <= 29) )
+}
+
+pred TimePrecedent [ dt1, dt2: DateTime]	// u1 succedes u2
+{
+	( u1.year > u2.year ) or
+	( u1.year = u2.year and u1.month > u2.month ) or
+	( u1.year = u2.year and u1.month = u2.month and u1.day > u2.day) or
+	( u1.year = u2.year and u1.month = u2.month and u1.day = u2.day and u1.hour > u2.hour ) or
+	( u1.year = u2.year and u1.month = u2.month and u1.day = u2.day and u1.hour = u2.hour and u1.minute > u2.minute ) or
+	( u1.year = u2.year and u1.month = u2.month and u1.day = u2.day and u1.hour = u2.hour  and u1.minute = u2.minute and u1.second > u2.second ) 
+}
+
 fact payOnlyReservationFeeOrRide
 {
 	no p: Payment | some re: Reservation, ri : Ride | re.payment = p and ri.reservation = re
