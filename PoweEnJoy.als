@@ -102,11 +102,11 @@ sig DateTime
 	( 1 <= month and month <= 12) and
 	( ( ( month = 11 or month = 4 or month = 6 or moth = 9 ) implies day <= 30) and
 		( ( month = 1 or month = 3 or month = 5 or moth = 7 or month = 8 or month = 10 or month = 12 ) implies day <= 31 ) and
-		( (month = 2 and year % 4 != 0 ) implies day <= 28 ) and
-		((month = 2 and year % 4 = 0) implies day <= 29) )
+		( (month = 2 and year - ( ( year / 4 ) * 4 ) != 0 ) implies day <= 28 ) and //anno non bisestile
+		((month = 2 and year - ( ( year / 4 ) * 4 ) = 0) implies day <= 29) ) //anno bisestile
 }
 
-pred TimePrecedent [ dt1, dt2: DateTime]	// u1 succedes u2
+pred TimePrecedent [ dt1, dt2: DateTime]	// dt1 succedes dt2
 {
 	( u1.year > u2.year ) or
 	( u1.year = u2.year and u1.month > u2.month ) or
