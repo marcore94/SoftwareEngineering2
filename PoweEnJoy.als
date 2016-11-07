@@ -30,10 +30,36 @@ sig Car
 	driver: lone User,
 	actualPosition: one Position,
 	code: one Int,
-	batteryLevel: one Int
+	batteryLevel: one Int,
+	state: one CarState
 }
 {
 	batteryLevel >= 0 and batteryLevel <= 100
+}
+
+abstract sig CarState {}
+
+sig Free extends CarState {}
+
+sig Reserved extends CarState {}
+
+sig InUse extends CarState {}
+
+sig Charging extends CarState {}
+
+fact noUserWhileChargingFreeOrReserved
+{
+	all c: Car | (c.state =  Charging or c.state = Free or c.state = Reserved) implies c.driver = none
+}
+
+fact driverInsideWhileDriving
+{
+	all c: Car | c.state = InUse implies c.driver != none
+}
+
+fact 
+{
+	
 }
 
 fact codesOfTheCarsAreUnique
@@ -101,9 +127,9 @@ sig DateTime
 	( 1 <= day) and
 	( 1 <= month and month <= 12) and
 	( ( ( month = 11 or month = 4 or month = 6 or moth = 9 ) implies day <= 30) and
-		( ( month = 1 or month = 3 or month = 5 or moth = 7 or month = 8 or month = 10 or month = 12 ) implies day <= 31 ) and
+		( ( month = 1 or month = 3 or month = 5 or moth = 7 or month = 8 or month = 10 or month = 12 ) implies day <= 31 ) /* and
 		( (month = 2 and year - ( ( year / 4 ) * 4 ) != 0 ) implies day <= 28 ) and //anno non bisestile
-		((month = 2 and year - ( ( year / 4 ) * 4 ) = 0) implies day <= 29) ) //anno bisestile
+		((month = 2 and year - ( ( year / 4 ) * 4 ) = 0) implies day <= 29) */ ) //anno bisestile 
 }
 
 pred TimePrecedent [ dt1, dt2: DateTime]	// dt1 succedes dt2
@@ -123,6 +149,6 @@ fact payOnlyReservationFeeOrRide
 
 fact userWhoReservesPays
 {
-	all ri:Ride | ri.payment.client = ri.client,
+	all ri:Ride | ri.payment.client = ri.client and
 	all re:Reservation | re.expirationFee.client = re.client
 }
