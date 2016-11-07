@@ -41,15 +41,15 @@ abstract sig CarState {}
 
 sig Free extends CarState {}
 
+sig Charging extends Free {}
+
 sig Reserved extends CarState {}
 
 sig InUse extends CarState {}
 
-sig Charging extends CarState {}
-
 fact noUserWhileChargingFreeOrReserved
 {
-	all c: Car | (c.state =  Charging or c.state = Free or c.state = Reserved) implies c.driver = none
+	all c: Car | (c.state = Free or c.state = Reserved) implies c.driver = none
 }
 
 fact driverInsideWhileDriving
@@ -82,6 +82,13 @@ sig ChargingArea extends SafeArea
 	#chargingCars <= numberOfPlugs
 }
 
+fact chargingCarsAreInChargingStatus
+{
+	all car:Car, ch1:ChargingArea |  one ch2:ChargingArea | 
+	car in ch1.chargingCars implies car.state = Charging and
+	car.state = Charging implies car in ch2.chargingCars   
+}
+
 sig Reservation
 {
 	client: one Client,
@@ -100,7 +107,18 @@ sig Ride
 	payment: one Payment
 }
 {
-	passengers >= 0 and passengers <= 4
+	passengers >= 0 and passengers <= 4 and
+	TimePrecedent [finishTime, startTime]
+}
+
+fact sameReservationAndRideClient
+{
+	all ri:Ride | ri.client = ri.reservation.client
+}
+
+fact rideFollowsReservation
+{
+	all ri:Ride |  TimePrecedent [ri.startTime, ri.reservation.time]
 }
 
 sig Payment
