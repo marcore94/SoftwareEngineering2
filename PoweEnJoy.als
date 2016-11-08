@@ -4,6 +4,9 @@ sig Position
 	longitude: one Int	//should be float
 }
 
+sig UnregisteredUser
+{}
+
 abstract sig User
 {
 	name: one string,
@@ -57,11 +60,6 @@ fact driverInsideWhileDriving
 	all c: Car | c.state = InUse implies c.driver != none
 }
 
-fact 
-{
-	
-}
-
 fact codesOfTheCarsAreUnique
 {
 	all c1, c2: Car | (c1!=c2)=>c1.code!=c2.code
@@ -89,12 +87,26 @@ fact chargingCarsAreInChargingStatus
 	car.state = Charging implies car in ch2.chargingCars   
 }
 
+pred addChargingCar (car, car' :Car, area, area' :ChargingArea)
+{
+	car.code = car'.code and car.state != Charging and area.position = area'.position and
+	car'.state=Charging and	area'.chargingCars = area.chargingCars + car' 
+}
+
 sig Reservation
 {
 	client: one Client,
 	reservedCar: one Car,
 	time: one DateTime,
 	expirationFee: lone Payment
+}
+
+fact reservationExpiresOrThereIsRide
+{
+	all re:Reservation, ri1 : Ride | one ri2:Ride | 
+	(all ri1:Ride | ri1.reservation = Re => Re.expirationFee = none) and
+	(re.expirationFee = none => ri2.reservation = re)
+	
 }
 
 sig Ride
@@ -121,11 +133,22 @@ fact rideFollowsReservation
 	all ri:Ride |  TimePrecedent [ri.startTime, ri.reservation.time]
 }
 
+fact userWhoReservesPays
+{
+	all ri:Ride | ri.payment.client = ri.client and
+	all re:Reservation | re.expirationFee != none implies re.expirationFee.client = re.client
+}
+
 sig Payment
 {
 	charge: one Int, //should be float
 	client: one Client,
 	dateTime: one DateTime
+}
+
+fact payOnlyReservationFeeOrRide
+{
+	no p: Payment | some re: Reservation, ri : Ride | re.expirationFee = p and ri.reservation = re
 }
 
 sig DateTime
@@ -138,7 +161,6 @@ sig DateTime
 	year: one Int
 }
 {
-	
 	( 0 <= second and second <= 59) and
 	( 0 <= minute and minute <= 59) and
 	( 0 <= hour and hour <= 23) and
@@ -158,15 +180,4 @@ pred TimePrecedent [ dt1, dt2: DateTime]	// dt1 succedes dt2
 	( u1.year = u2.year and u1.month = u2.month and u1.day = u2.day and u1.hour > u2.hour ) or
 	( u1.year = u2.year and u1.month = u2.month and u1.day = u2.day and u1.hour = u2.hour and u1.minute > u2.minute ) or
 	( u1.year = u2.year and u1.month = u2.month and u1.day = u2.day and u1.hour = u2.hour  and u1.minute = u2.minute and u1.second > u2.second ) 
-}
-
-fact payOnlyReservationFeeOrRide
-{
-	no p: Payment | some re: Reservation, ri : Ride | re.payment = p and ri.reservation = re
-}
-
-fact userWhoReservesPays
-{
-	all ri:Ride | ri.payment.client = ri.client and
-	all re:Reservation | re.expirationFee.client = re.client
 }
