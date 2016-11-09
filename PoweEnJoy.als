@@ -144,7 +144,7 @@ sig Reservation
 {
 	client: one Client,
 	reservedCar: one Car,
-	time: one DateTime,
+	//time: one DateTime,
 	expirationFee: lone Payment
 }
 
@@ -159,15 +159,15 @@ fact reservationExpiresOrThereIsRide
 sig Ride
 {
 	client: one Client,
-	startTime: one DateTime,
-	finishTime: one DateTime,
+	//startTime: one DateTime,
+	//finishTime: one DateTime,
 	reservation: one Reservation,
 	passengers: one Int,
 	payment: one Payment
 }
 {
-	passengers >= 0 and passengers <= 4 and
-	TimePrecedent [finishTime, startTime]
+	passengers >= 0 and passengers <= 4 //and
+	//TimePrecedent [finishTime, startTime]
 }
 
 fact sameReservationAndRideClient
@@ -175,10 +175,10 @@ fact sameReservationAndRideClient
 	all ri:Ride | ri.client = ri.reservation.client
 }
 
-fact rideFollowsReservation
+/*fact rideFollowsReservation
 {
 	all ri:Ride |  TimePrecedent [ri.startTime, ri.reservation.time]
-}
+}*/
 
 fact userWhoReservesPays
 {
@@ -190,7 +190,7 @@ sig Payment
 {
 	charge: one Int, //should be float
 	client: one Client,
-	dateTime: one DateTime
+	//dateTime: one DateTime
 }
 
 fact payOnlyReservationFeeOrRide
@@ -198,7 +198,7 @@ fact payOnlyReservationFeeOrRide
 	no p: Payment | some re: Reservation, ri : Ride | re.expirationFee = p and ri.reservation = re
 }
 
-sig DateTime
+/*sig DateTime
 {
 	second: one Int,
 	minute: one Int,
@@ -220,7 +220,7 @@ sig DateTime
 		//((month = 2 and year - ( ( year / 4 ) * 4 ) = 0) implies day <= 29)  ) anno bisestile 
 }*/
 
-pred TimePrecedent [ u1, u2: DateTime] //	 u1 succedes u2
+/*pred TimePrecedent [ u1, u2: DateTime] //	 u1 succedes u2
 {
 	( u1.year > u2.year ) or
 	( u1.year = u2.year and u1.month > u2.month ) or
@@ -228,7 +228,7 @@ pred TimePrecedent [ u1, u2: DateTime] //	 u1 succedes u2
 	( u1.year = u2.year and u1.month = u2.month and u1.day = u2.day and u1.hour > u2.hour ) or
 	( u1.year = u2.year and u1.month = u2.month and u1.day = u2.day and u1.hour = u2.hour and u1.minute > u2.minute ) or
 	( u1.year = u2.year and u1.month = u2.month and u1.day = u2.day and u1.hour = u2.hour  and u1.minute = u2.minute and u1.second > u2.second ) 
-}
+}*/
 
 pred show{}
-run show for 3 but 12 int
+run show for 3
