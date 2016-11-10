@@ -101,9 +101,23 @@ one sig Reserved extends CarState
 one sig InUse extends CarState
 {}
 
+one sig Maintenance extends CarState
+{}
+
+fact carNotReservableDuringMaintenance 
+{
+	all car:Car | car.state = Maintenance implies no re : Reservation | re.reservedCar = car
+}
+/*ha senso solo se con maintenance includiamo il caso in cui l'operatore guida la macchina
+fact carNotUsableByClientsDuringMaintenace
+{
+	all car:Car | car.state = Maintenance implies car.driver = Operator
+}
+*/
 fact chargingConditions
 {
-	all car: Car | car.charging = True implies (car.state = Free or car.state = Reserved)
+	all car: Car | car.charging = True implies (car.state = Free or car.state = Reserved 
+	or car.state = Maintenance) //per includere ricarica in loco
 }
 
 fact noUserWhileFreeOrReserved
@@ -113,7 +127,8 @@ fact noUserWhileFreeOrReserved
 
 fact driverInsideWhileDriving
 {
-	all c: Car | c.state = InUse implies ( c.driver != none and c.actualPosition = c.driver.actualPosition )
+	all c: Car | c.state = InUse implies ( c.driver != none and c.actualPosition = c.driver.actualPosition and 
+	(c.driver != Operator implies one re : Reservation | re.reservedCar = c and re.client = c.driver)) 
 }
 
 fact codesOfTheCarsAreUnique
@@ -123,12 +138,14 @@ fact codesOfTheCarsAreUnique
 
 fact carStateInSafeArea
 {
-	all car: Car | (car.state = Free or car.state = Reserved) implies some safeArea: SafeArea | InsideArea[car, safeArea]
+	all car: Car | (car.state = Free or car.state = Reserved) implies 
+	some safeArea: SafeArea | InsideArea[car, safeArea]
 }
 
 fact noEnergyLawViolation
 {
-	all car: Car | car.batteryLevel = EmptyBatteryLevel implies (car.state != InUse and car.state != Reserved)
+	all car: Car | car.batteryLevel = EmptyBatteryLevel implies 
+	(car.state != InUse and car.state != Reserved)
 }
 
 sig SafeArea
@@ -211,6 +228,11 @@ fact sameReservationAndRideClient
 	all ri:Ride | ri.client = ri.reservation.client
 }
 
+fact carDriverIsTheReservationClient
+{
+	all ri:Ride | ri.reservation.reservedCar.driver = ri.reservation.client
+}
+
 fact userWhoReservesPays
 {
 	all ri:Ride | ri.payment.client = ri.client and
@@ -219,7 +241,7 @@ fact userWhoReservesPays
 
 sig Payment
 {
-	client: one Client,
+	client: one Client
 }
 
 fact payOnlyReservationFeeOrRide
