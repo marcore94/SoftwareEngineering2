@@ -1,13 +1,7 @@
-sig Position
-{
-	latitude: one Int,	//should be float
-	longitude: one Int	//should be float
-}
+open util/boolean
 
-fact noSameCoordinatesPositions
-{
-	all disjoint p1, p2: Position | p1.latitude != p2.latitude and p1.longitude != p2.longitude
-}
+sig Position
+{}
 
 pred InsideArea [car: Car, safeArea: SafeArea]
 {
@@ -24,7 +18,16 @@ abstract sig User
 	email: one String,
 	password: one String,
 	licence: one String,*/
+	email: one Email,
 	actualPosition: one Position
+}
+
+sig Email
+{}
+
+fact oneMailPerUser
+{
+	all e: Email | one user : User | user.email = e
 }
 
 fact noUserInSamePosition
@@ -32,10 +35,10 @@ fact noUserInSamePosition
 	all disjoint u1, u2: User | u1.actualPosition != u2.actualPosition
 }
 
-/*fact emailIsUnique
+fact emailIsUnique
 {
-	all u1,u2: User | (u1!=u2)=> u1.email != u2.email
-}*/
+	all disjoint u1,u2: User | u1.email != u2.email
+}
 
 sig Client extends User
 {}
@@ -45,15 +48,31 @@ sig Operator extends User
 
 sig Car
 {
+	charging: one Bool,
 	driver: lone User,
 	actualPosition: one Position,
-	code: one Int,
-	batteryLevel: one Int,
+	code: one Code,
+	batteryLevel: one BatteryLevel,
 	state: one CarState
 }
-{
-	batteryLevel >= 0 and batteryLevel <= 100
-}
+
+sig Code
+{}
+
+abstract sig BatteryLevel
+{}
+
+one sig HighBatteryLevel extends BatteryLevel
+{}
+
+one sig MediumBatteryLevel extends BatteryLevel
+{}
+
+one sig LowBatteryLevel extends BatteryLevel
+{}
+
+one sig EmptyBatteryLevel extends BatteryLevel
+{}
 
 fact atMostOneCarForDriver
 {
@@ -65,17 +84,24 @@ fact noCarsInSamePosition
 	all disjoint c1, c2: Car | c1.actualPosition != c2.actualPosition
 }
 
-abstract sig CarState {}
+abstract sig CarState
+{}
 
-one sig Free extends CarState {}
+one sig Free extends CarState
+{}
 
-one sig Charging extends Free {}
+one sig Reserved extends CarState
+{}
 
-one sig Reserved extends CarState {}
+one sig InUse extends CarState
+{}
 
-one sig InUse extends CarState {}
+fact chargingConditions
+{
+	all car: Car | car.charging = True implies (car.state = Free or car.state = Reserved)
+}
 
-fact noUserWhileChargingFreeOrReserved
+fact noUserWhileFreeOrReserved
 {
 	all c: Car | (c.state = Free or c.state = Reserved) implies c.driver = none
 }
@@ -97,7 +123,7 @@ fact carStateInSafeArea
 
 fact noEnergyLawViolation
 {
-	all car: Car | car.batteryLevel = 0 implies (car.state != InUse and car.state != Reserved)
+	all car: Car | car.batteryLevel = EmptyBatteryLevel implies (car.state != InUse and car.state != Reserved)
 }
 
 sig SafeArea
@@ -131,20 +157,13 @@ fact chargingCarsAreInTheChargingArea
 
 fact chargingCarsAreInChargingStatus
 {
-	all c : Car | some ca: ChargingArea |( c in ca.chargingCars ) iff c.state = Charging 
-}
-
-pred addChargingCar (car, car' :Car, area, area': ChargingArea)
-{
-	car.code = car'.code and car.state != Charging and area.positions = area'.positions and
-	car'.state=Charging and	area'.chargingCars = area.chargingCars + car' and InsideArea[car', area'] and InsideArea[car, area]
+	all c : Car, ca: ChargingArea |( c in ca.chargingCars ) iff c.charging = True 
 }
 
 sig Reservation
 {
 	client: one Client,
 	reservedCar: one Car,
-	//time: one DateTime,
 	expirationFee: lone Payment
 }
 
@@ -156,29 +175,26 @@ fact reservationExpiresOrThereIsRide
 	
 }
 
+fact noReservationWithOutOfBatteryCars
+{
+	all r: Reservation | r.reservedCar.batteryLevel != LowBatteryLevel and  r.reservedCar.batteryLevel != EmptyBatteryLevel
+}
+
 sig Ride
 {
 	client: one Client,
-	//startTime: one DateTime,
-	//finishTime: one DateTime,
 	reservation: one Reservation,
 	passengers: one Int,
 	payment: one Payment
 }
 {
-	passengers >= 0 and passengers <= 4 //and
-	//TimePrecedent [finishTime, startTime]
+	passengers >= 0 and passengers <= 4
 }
 
 fact sameReservationAndRideClient
 {
 	all ri:Ride | ri.client = ri.reservation.client
 }
-
-/*fact rideFollowsReservation
-{
-	all ri:Ride |  TimePrecedent [ri.startTime, ri.reservation.time]
-}*/
 
 fact userWhoReservesPays
 {
@@ -188,9 +204,7 @@ fact userWhoReservesPays
 
 sig Payment
 {
-	charge: one Int, //should be float
 	client: one Client,
-	//dateTime: one DateTime
 }
 
 fact payOnlyReservationFeeOrRide
@@ -198,37 +212,10 @@ fact payOnlyReservationFeeOrRide
 	no p: Payment | some re: Reservation, ri : Ride | re.expirationFee = p and ri.reservation = re
 }
 
-/*sig DateTime
+fact positionOutSafeArea
 {
-	second: one Int,
-	minute: one Int,
-	hour: one Int,
-	day: one Int,
-	month: one Int,
-	year: one Int
+	some position: Position | all sa: SafeArea | position not in sa.positions
 }
-{second >= 0 and second <= 59}
-/*{
-	( 0 <= second and second <= 59) and
-	( 0 <= minute and minute <= 59) and
-	( 0 <= hour and hour <= 23) and
-	( 1 <= day) and
-	( 1 <= month and month <= 12) and
-	( ( ( month = 11 or month = 4 or month = 6 or month = 9 ) implies day <= 30) and
-		( ( month = 1 or month = 3 or month = 5 or month = 7 or month = 8 or month = 10 or month = 12 ) implies day <= 31 )) // and
-		//( (month = 2 and year - ( ( year / 4 ) * 4 ) != 0 ) implies day <= 28 ) and  anno non bisestile
-		//((month = 2 and year - ( ( year / 4 ) * 4 ) = 0) implies day <= 29)  ) anno bisestile 
-}*/
-
-/*pred TimePrecedent [ u1, u2: DateTime] //	 u1 succedes u2
-{
-	( u1.year > u2.year ) or
-	( u1.year = u2.year and u1.month > u2.month ) or
-	( u1.year = u2.year and u1.month = u2.month and u1.day > u2.day) or
-	( u1.year = u2.year and u1.month = u2.month and u1.day = u2.day and u1.hour > u2.hour ) or
-	( u1.year = u2.year and u1.month = u2.month and u1.day = u2.day and u1.hour = u2.hour and u1.minute > u2.minute ) or
-	( u1.year = u2.year and u1.month = u2.month and u1.day = u2.day and u1.hour = u2.hour  and u1.minute = u2.minute and u1.second > u2.second ) 
-}*/
 
 pred show{}
-run show for 3
+run show for 5 but 3 Position
