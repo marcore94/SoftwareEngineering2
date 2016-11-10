@@ -59,6 +59,11 @@ sig Car
 sig Code
 {}
 
+fact everyCodeAssignedToCar
+{
+	all c: Code | one car: Car | car.code = c
+}
+
 abstract sig BatteryLevel
 {}
 
@@ -167,11 +172,21 @@ sig Reservation
 	expirationFee: lone Payment
 }
 
+fact oneReservationPerClient
+{
+	all r1: Reservation, r2: Reservation | r1.client = r2.client implies r1 = r2
+}
+
+fact oneReservationPerCar
+{
+	all r1: Reservation, r2: Reservation | r1.reservedCar = r2.reservedCar implies r1 = r2
+}
+
 fact reservationExpiresOrThereIsRide
 {
 	all re:Reservation, ri1 : Ride | one ri2:Ride | 
 	( ri1.reservation = re => re.expirationFee = none) and
-	(re.expirationFee = none => ri2.reservation = re)
+	((re.expirationFee = none and re.reservedCar.state != Free) => ri2.reservation = re)
 	
 }
 
@@ -218,4 +233,4 @@ fact positionOutSafeArea
 }
 
 pred show{}
-run show for 5 but 3 Position
+run show for 3
