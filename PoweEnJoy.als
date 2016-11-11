@@ -70,7 +70,10 @@ abstract sig BatteryLevel
 one sig HighBatteryLevel extends BatteryLevel
 {}
 
-one sig MediumBatteryLevel extends BatteryLevel
+one sig MediumHighBatteryLevel extends BatteryLevel
+{}
+
+one sig MediumLowBatteryLevel extends BatteryLevel
 {}
 
 one sig LowBatteryLevel extends BatteryLevel
@@ -112,6 +115,7 @@ fact carNotReservableDuringMaintenance
 fact carNotDrivableDuringMaintenance
 {
 	all car:Car | car.state = Maintenance implies car.driver = none
+
 }
 
 fact chargingConditions
@@ -188,6 +192,9 @@ sig Reservation
 	reservedCar: one Car,
 	expirationFee: lone Payment
 }
+{
+	expirationFee.discounts = none
+}
 
 fact oneReservationPerClient
 {
@@ -244,12 +251,12 @@ abstract sig Discount
 	amount : one Int	
 }
 
-sig MoreThan2Passengers extends Discount
+one sig MoreThan2Passengers extends Discount
 {}
 
 fact moreThan2PassengersCondition
 {
-	all ri:Ride, m2p: MoreThan2Passengers | m2p in ri.payment.discounts implies ri.passengers >=2
+	all ri:Ride, m2p: MoreThan2Passengers | m2p in ri.payment.discounts iff ri.passengers >=2
 } 
 
 sig Payment
@@ -259,7 +266,7 @@ sig Payment
 	appliedDiscount : one Discount
 }
 {
-	appliedDiscount in Discount
+	appliedDiscount in discounts
 }
 
 fact payOnlyReservationFeeOrRide
@@ -273,4 +280,4 @@ fact positionOutSafeArea
 }
 
 pred show{}
-run show for 3
+run show for 8
