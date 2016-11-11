@@ -108,12 +108,12 @@ fact carNotReservableDuringMaintenance
 {
 	all car:Car | car.state = Maintenance implies no re : Reservation | re.reservedCar = car
 }
-/*ha senso solo se con maintenance includiamo il caso in cui l'operatore guida la macchina
-fact carNotUsableByClientsDuringMaintenace
+
+fact carNotDrivableDuringMaintenance
 {
-	all car:Car | car.state = Maintenance implies car.driver = Operator
+	all car:Car | car.state = Maintenance implies car.driver = none
 }
-*/
+
 fact chargingConditions
 {
 	all car: Car | car.charging = True implies (car.state = Free or car.state = Reserved 
@@ -239,9 +239,27 @@ fact userWhoReservesPays
 	all re:Reservation | re.expirationFee != none implies re.expirationFee.client = re.client
 }
 
+abstract sig Discount
+{
+	amount : one Int	
+}
+
+sig MoreThan2Passengers extends Discount
+{}
+
+fact moreThan2PassengersCondition
+{
+	all ri:Ride, m2p: MoreThan2Passengers | m2p in ri.payment.discounts implies ri.passengers >=2
+} 
+
 sig Payment
 {
-	client: one Client
+	client: one Client,
+	discounts : set Discount,
+	appliedDiscount : one Discount
+}
+{
+	appliedDiscount in Discount
 }
 
 fact payOnlyReservationFeeOrRide
