@@ -13,11 +13,6 @@ sig UnregisteredUser
 
 abstract sig User
 {
-	/*name: one String,
-	surname: one String,
-	email: one String,
-	password: one String,
-	licence: one String,*/
 	email: one Email,
 	actualPosition: one Position
 }
@@ -208,38 +203,10 @@ fact oneActiveReservationPerClient
 	all disjoint r1, r2 : Reservation | ( r1.expired = False and r2.expired = False ) implies r1.client != r2.client
 }
 
-/*sig Reservation
-{
-	client: one Client,
-	reservedCar: one Car,
-	expirationFee: lone Payment
-}
-{
-	expirationFee.discounts = none
-}
-
-fact oneReservationPerClient
-{
-	all r1: Reservation, r2: Reservation | r1.client = r2.client implies r1 = r2
-}
-
-fact oneReservationPerCar
-{
-	all r1: Reservation, r2: Reservation | r1.reservedCar = r2.reservedCar implies r1 = r2
-}
-
-fact reservationExpiresOrThereIsRide
-{
-	all re:Reservation, ri1 : Ride | one ri2:Ride | 
-	( ri1.reservation = re => re.expirationFee = none) and
-	((re.expirationFee = none and re.reservedCar.state != Free) => ri2.reservation = re)
-	
-}
-
 fact noReservationWithOutOfBatteryCars
 {
 	all r: Reservation | r.reservedCar.batteryLevel != LowBatteryLevel and  r.reservedCar.batteryLevel != EmptyBatteryLevel
-}*/
+}
 
 sig Ride
 {
@@ -270,46 +237,20 @@ fact sameRiderThatReserved
 	all ri : Ride | ri.reservation.client = ri.client
 }
 
-/*fact cose
-{
-	all c : Car | ( c.state = InUse ) implies ( one ri : Ride | ri.finished = False and ri.reservation.reservedCar = c )
-}*/
-
 fact carStateWhileReserved
 {
 	( all c : Car | c.state = Reserved implies one re : Reservation | re.reservedCar = c and not relatedRideExists[re] ) and
 	( all re : Reservation | ( not relatedRideExists[re] and re.expired = False ) implies one c : Car | re.reservedCar = c )
 }
 
-/*fact carStateWhileInUse
+fact carStateWhileInUse
 {
 	( all ri : Ride | ri.finished = False implies ri.reservation.reservedCar.state = InUse )
 }
 
-fact carStateWhileFree
+/*fact carStateWhileFree
 {
 	all c : Car | ( c.driver = none and ( one sa : SafeArea | c.actualPosition in sa.positions ) and ( no re : Reservation | re.reservedCar = c ) ) implies (c.state = Free)
-}*/
-
-/*fact cose
-{
-	all re : Reservation | ( re.reservedCar.state = InUse and re.expired = False ) implies ( one ri : Ride | ri.reservation = re )
-}
-
-fact sameReservationAndRideClient
-{
-	all ri:Ride | ri.client = ri.reservation.client
-}
-
-fact carDriverIsTheReservationClient
-{
-	all ri:Ride | ri.reservation.reservedCar.driver = ri.reservation.client
-}
-
-fact userWhoReservesPays
-{
-	all ri:Ride | ri.payment.client = ri.client and
-	all re:Reservation | re.expirationFee != none implies re.expirationFee.client = re.client
 }*/
 
 abstract sig Discount
@@ -347,22 +288,22 @@ fact noStatndalonePayments
 	all p : Payment | ( one re : Reservation | re.expirationFee = p ) or ( one ri : Ride | ri.payment = p )
 }
 
-/*
-fact payOnlyReservationFeeOrRide
-{
-	no p: Payment | some re: Reservation, ri : Ride | re.expirationFee = p and ri.reservation = re
-}*/
-
 fact positionOutSafeArea
 {
 	some position: Position | all sa: SafeArea | position not in sa.positions
 }
 
+fact clientThatReservesPay
+{
+	( all r : Ride |  r.finished = True implies r.client = r.payment.client  ) and
+	( all re : Reservation | re.expired = True implies re.client = re.expirationFee.client )
+}
+
 assert a
 {
-	no c : Car | c.state = InUse and c.driver in Client
+	no p: Payment | some re: Reservation, ri : Ride | re.expirationFee = p and ri.reservation = re
 }
 
 pred show{}
 //check a
-run show for 3
+run show for 2
