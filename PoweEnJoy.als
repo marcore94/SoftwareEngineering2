@@ -261,6 +261,12 @@ abstract sig Discount
 one sig MoreThan2Passengers extends Discount
 {}
 
+one sig LessThan50%BatteryUsed extends Discount
+{}
+
+one sig CarLeftCharging extends Discount
+{}
+
 fact moreThan2PassengersCondition
 {
 	all ri:Ride, m2p: MoreThan2Passengers | m2p in ri.payment.discounts iff ri.passengers >=2
