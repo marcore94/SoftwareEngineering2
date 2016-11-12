@@ -147,6 +147,38 @@ fact noEnergyLawViolation
 	(car.state != InUse and car.state != Reserved)
 }
 
+sig Notification
+{
+	operator: one Operator,
+	car: one Car
+}
+
+fact oneNotificationPerOperatorAndCar
+{
+	all disjoint n1, n2: Notification | n1.operator != n2.operator and n1.car != n2.car
+}
+
+fact operatorNotifiedWhenDrives
+{
+	all c: Car | (c.driver in Operator and c.driver != none) implies (one n: Notification | n.car = c and n.operator = c.driver)	
+}
+
+fact operatorNotifiedForManteinance
+{
+	all c: Car | c.state = Maintenance implies one n: Notification | n.car = c
+}
+
+fact nearestOperator
+{
+	all n: Notification | n.car.actualPosition != n.operator.actualPosition implies no o: Operator | o.actualPosition = n.car.actualPosition
+}
+
+fact operatorInSameCarPositionForChargeOnSite
+{
+	(all n: Notification | n.car.charging = True implies n.operator.actualPosition = n.car.actualPosition) and
+	(all n: Notification | n.operator.actualPosition = n.car.actualPosition and n.car.state = Maintenance implies n.car.charging = True)
+}
+
 sig SafeArea
 {
 	positions: set Position
@@ -307,9 +339,9 @@ fact clientThatReservesPay
 
 assert a
 {
-	no p: Payment | some re: Reservation, ri : Ride | re.expirationFee = p and ri.reservation = re
+	no c: Car | c.driver in Operator and c.driver != none
 }
 
 pred show{}
 //check a
-run show for 2
+run show for 3
