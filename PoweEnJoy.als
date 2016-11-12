@@ -225,7 +225,7 @@ sig Reservation
 	expired: one Bool
 }
 {
-	( expired = True implies ( reservedCar = none and expirationFee != none ) ) and
+	( expired = True implies ( reservedCar = none and expirationFee != none) ) and
 	( expired = False implies ( expirationFee = none  ) )
 }
 
@@ -293,6 +293,9 @@ abstract sig Discount
 {
 	amount : one Int	
 }
+{
+	amount >0 and amount <100
+}
 
 one sig MoreThan2Passengers extends Discount
 {}
@@ -302,11 +305,31 @@ fact moreThan2PassengersCondition
 	all ri:Ride, m2p: MoreThan2Passengers | m2p in ri.payment.discounts iff ri.passengers >=2
 } 
 
+one sig EnoughBatteryLeft extends Discount
+{}
+
+fact enoughBatteryLeftCondition
+{
+	all ri: Ride, eBL: EnoughBatteryLeft | eBL in ri.payment.discounts iff 
+	(ri.finished = True and ri.reservation.reservedCar.batteryLevel in
+	(MediumHighBatteryLevel + HighBatteryLevel))
+}
+
+one sig CarPutInCharge extends Discount
+{}
+
+fact carPutInChargeCondition
+{
+	all ri:Ride, cPC: CarPutInCharge | cPC in ri.payment.discounts iff
+	(ri.finished = True and one ca:ChargingArea | InsideArea[ri.reservation.reservedCar, ca] and 
+	ri.reservation.reservedCar.charging = True)
+}
+
 sig Payment
 {
 	client: one Client,
 	discounts : set Discount,
-	appliedDiscount : one Discount
+	appliedDiscount : lone Discount
 }
 {
 	appliedDiscount in discounts
@@ -319,7 +342,7 @@ fact paymentIsUnique
 	( all ri : Ride, re : Reservation | re.expirationFee != ri.payment or (re.expirationFee = none and ri.payment = none ) )
 }
 
-fact noStatndalonePayments
+fact noStandalonePayments
 {
 	all p : Payment | ( one re : Reservation | re.expirationFee = p ) or ( one ri : Ride | ri.payment = p )
 }
@@ -335,11 +358,20 @@ fact clientThatReservesPay
 	( all re : Reservation | re.expired = True implies re.client = re.expirationFee.client )
 }
 
+fact onlyOneDiscountApplied
+{
+	all re:Reservation, ri:Ride | re.expired = True implies 
+		re.expirationFee.discounts = none and
+		(#ri.payment.discounts >1 implies all d:Discount| d in ri.payment.discounts and  
+		ri.payment.appliedDiscount.amount >= d.amount)
+}
+
+/*
 assert a
 {
 	no c: Car | c.state = Maintenance
 }
-
+*/
 pred show{}
-check a
+//check a
 run show for 3
