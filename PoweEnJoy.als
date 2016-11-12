@@ -110,7 +110,11 @@ fact carNotReservableDuringMaintenance
 fact carNotDrivableDuringMaintenance
 {
 	all car:Car | car.state = Maintenance implies car.driver = none
+}
 
+fact carInMaintenanceOutOfChargingArea
+{
+	all c: Car | c.state = Maintenance implies no ca: ChargingArea | c.actualPosition in ca.positions
 }
 
 fact chargingConditions
@@ -293,12 +297,6 @@ abstract sig Discount
 one sig MoreThan2Passengers extends Discount
 {}
 
-one sig LessThan50%BatteryUsed extends Discount
-{}
-
-one sig CarLeftCharging extends Discount
-{}
-
 fact moreThan2PassengersCondition
 {
 	all ri:Ride, m2p: MoreThan2Passengers | m2p in ri.payment.discounts iff ri.passengers >=2
@@ -339,9 +337,9 @@ fact clientThatReservesPay
 
 assert a
 {
-	no c: Car | c.driver in Operator and c.driver != none
+	no c: Car | c.state = Maintenance
 }
 
 pred show{}
-//check a
+check a
 run show for 3
