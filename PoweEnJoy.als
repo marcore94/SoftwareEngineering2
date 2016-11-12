@@ -109,7 +109,10 @@ fact carNotReservableDuringMaintenance
 
 fact carNotDrivableDuringMaintenance
 {
-	all car:Car | car.state = Maintenance implies car.driver = none
+	all car:Car | ( car.state = Maintenance ) implies
+	( ( car.driver = none ) and
+	( ( car.batteryLevel = LowBatteryLevel or car.batteryLevel = EmptyBatteryLevel ) and ( car.charging = False ) ) and
+	( one safeArea : SafeArea | InsideArea[car, safeArea] ) )
 }
 
 fact carInMaintenanceOutOfChargingArea
@@ -153,7 +156,7 @@ fact noEnergyLawViolation
 
 sig Notification
 {
-	operator: one Operator,
+	operator: lone Operator,
 	car: one Car
 }
 
@@ -181,6 +184,25 @@ fact operatorInSameCarPositionForChargeOnSite
 {
 	(all n: Notification | n.car.charging = True implies n.operator.actualPosition = n.car.actualPosition) and
 	(all n: Notification | n.operator.actualPosition = n.car.actualPosition and n.car.state = Maintenance implies n.car.charging = True)
+}
+
+fact carsInMaintenanceIfLowBattery
+{
+	all car : Car | ( ( ( car.batteryLevel = LowBatteryLevel or car.batteryLevel = EmptyBatteryLevel ) and ( car.charging = False ) ) and
+	( one safeArea : SafeArea | InsideArea[car, safeArea] ) and
+	( car.driver = none ) ) implies
+	car.state = Maintenance
+}
+
+pred FreeOperator[ o : Operator]
+{
+	no n : Notification | n.operator = o
+}
+
+fact pendingNotifications
+{
+	all n : Notification | ( ( n.operator != none ) or ( n.operator = none and  ( no o : Operator | FreeOperator[ o ] ) ) ) and
+	not (  ( n.operator != none ) and ( n.operator = none and  ( no o : Operator | FreeOperator[ o ] ) )  )
 }
 
 sig SafeArea
@@ -369,7 +391,8 @@ fact onlyOneDiscountApplied
 /*
 assert a
 {
-	no c: Car | c.state = Maintenance
+	//no n : Notification | (n.operator != none) and ( one sa : SafeArea | n.car.actualPosition in sa.positions) and (n.car.state = Maintenance)
+	no n : Notification | (n.operator != none) and (one r : Ride | r.reservation.reservedCar = n.car)
 }
 */
 pred show{}
