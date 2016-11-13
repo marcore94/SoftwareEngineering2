@@ -123,7 +123,7 @@ fact carInMaintenanceOutOfChargingArea
 fact chargingConditions
 {
 	all car: Car | car.charging = True implies (car.state = Free or car.state = Reserved 
-	or car.state = Maintenance) //per includere ricarica in loco
+	or car.state = Maintenance) 
 }
 
 fact noUserWhileFreeOrReserved
@@ -316,11 +316,6 @@ fact existsRideOrReservedCarHasNotBeenPickedUpYet
 	all re : Reservation | ( re.expired = False ) implies (  ( re.reservedCar.state = Reserved or ( one r : Ride | ( r.reservation = re ) ) ) and not ( re.reservedCar.state = Reserved and ( one r : Ride | ( r.reservation = re ) ) ) )
 }
 
-/*fact carStateWhileFree
-{
-	all c : Car | ( c.driver = none and ( one sa : SafeArea | c.actualPosition in sa.positions ) and ( no re : Reservation | re.reservedCar = c ) ) implies (c.state = Free)
-}*/
-
 abstract sig Discount
 {}
 
@@ -388,12 +383,6 @@ fact discountOnlyOnRide
 	all reservation : Reservation | ( reservation.expired = True ) implies ( reservation.expirationFee.appliedDiscount = none and #(reservation.expirationFee.discounts) = 0 )
 }
 
-assert a
-{
-	//no n : Notification | (n.operator != none) and ( one sa : SafeArea | n.car.actualPosition in sa.positions) and (n.car.state = Maintenance)
-	no car : Car | car.driver in Client and (not (carIsInUse[car])) and car.driver != none
-}
-
 pred carIsInsideSafeArea [car : Car]
 {
 	one safeArea : SafeArea | InsideArea [car, safeArea]
@@ -406,7 +395,6 @@ pred carIsInUse [car : Car]
 
 pred carNeedsMaintenance [ c : Car ]
 {
-	//provvisorio, suppone che la notifica venga creata sempre correttamente e che non rimanga in giro dopo che c'è stato l'intervento dell'operatore
 	one notification : Notification | notification.car = c
 }
 
@@ -457,13 +445,10 @@ pred show{
 #Client>3
 #Car>2}
 run show for 8
-check goalG4 // controllato corretto
-check goalG5 // controllato corretto
-check goalG6 // controllato corretto
-check goalG7 // controllato corretto
-check goalG9 // controllato corretto
-check goalG10 // controllato corretto
-check goalG11 // controllato corretto
-//check a // controllato corretto
-//check b // controllato corretto
-
+check goalG4
+check goalG5
+check goalG6
+check goalG7
+check goalG9
+check goalG10
+check goalG11
