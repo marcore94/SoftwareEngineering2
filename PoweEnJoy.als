@@ -403,7 +403,7 @@ assert goalG4
 
 assert goalG5
 {
-	some reservation : Reservation | expired = True
+	some reservation : Reservation | reservation.expired = True
 }
 
 pred show{}
