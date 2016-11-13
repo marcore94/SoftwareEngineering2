@@ -369,42 +369,25 @@ fact clientThatReservesPay
 
 fact onlyOneDiscountApplied
 {
-	all re:Reservation, ri:Ride, d,d1: Discount | re.expired = True implies 
-		re.expirationFee.discounts = none and
+	all re:Reservation, ri:Ride, d,d1: Discount | (re.expired = True implies 
+		re.expirationFee.discounts = none) and
 		(#ri.payment.discounts = 1 implies (ri.payment.appliedDiscount = d and d in ri.payment.discounts)) and
 		(#ri.payment.discounts >1 implies 
-		((d=CarPutInCharge and d in ri.payment.discounts) implies ri.payment.appliedDiscount = d) and
+		(((d=CarPutInCharge and d in ri.payment.discounts) implies ri.payment.appliedDiscount = d) and
 		((d=CarPutInCharge and d1=EnoughBatteryLeft and d not in ri.payment.discounts and d1 in ri.payment.discounts)
-			implies ri.payment.appliedDiscount = d1) )
+			implies ri.payment.appliedDiscount = d1)))
 }
-
-assert noRide
-{
-	no r:Ride | r.finished = True
-}
-//check noRide
 
 fact discountOnlyOnRide
 {
 	all reservation : Reservation | ( reservation.expired = True ) implies ( reservation.expirationFee.appliedDiscount = none and #(reservation.expirationFee.discounts) = 0 )
 }
 
-/*fact existsRideOrReservedCarHasNotBeenPickedUpYet
-{
-	all re : Reservation | ( re.expired = False ) implies (  ( re.reservedCar.state = Reserved or ( one r : Ride | ( r.reservation = re ) ) ) and not ( re.reservedCar.state = Reserved and ( one r : Ride | ( r.reservation = re ) ) ) )
-}
-*/
 assert a
 {
 	//no n : Notification | (n.operator != none) and ( one sa : SafeArea | n.car.actualPosition in sa.positions) and (n.car.state = Maintenance)
 	no car : Car | car.driver in Client and (not (carIsInUse[car])) and car.driver != none
 }
-
-assert b
-{
-	no p:Payment | p.appliedDiscount !=CarPutInCharge and p.discounts!=none and one d:CarPutInCharge | d in p.discounts
-}
-check b
 
 pred carIsInsideSafeArea [car : Car]
 {
