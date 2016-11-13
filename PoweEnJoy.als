@@ -455,13 +455,10 @@ assert goalG9
 	all ride : Ride | ride.finished = True implies ( ( ( carIsInsideSafeArea [ ride.reservation.reservedCar ] ) or ( carIsInUse [ ride.reservation.reservedCar ] ) ) and not ( ( carIsInsideSafeArea [ ride.reservation.reservedCar ]  ) and ( carIsInUse [ ride.reservation.reservedCar ] ) ) )
 }
 
-/*
-DA RIVEDERE
 assert goalG11
 {
-	 all c : Car | ( carNeedsMaintenance [ c ] ) implies ( ( ( one o : Operator , notification : Notification | notification.operator != none and notification.operator = o and notification.car = c ) or ( one notification : Notification | notificationIsPending [ notification ] ) ) and not
-	( ( one o : Operator , notification : Notification | notification.operator != none and notification.operator = o and notification.car = c ) and ( one notification : Notification | notificationIsPending [ notification ] ) ) )
-}*/
+	all c : Car | ( carNeedsMaintenance [ c ] ) implies ( ( ( one o : Operator , notification : Notification | notification.operator != none and notification.operator = o and notification.car = c ) or ( one notification : Notification | notificationIsPending [ notification ] ) ) )
+}
 
 pred show{}
 //check goalG4 // controllato corretto
@@ -469,6 +466,6 @@ pred show{}
 //check goalG6 // controllato corretto
 //check goalG7 // controllato corretto
 //check goalG9 // controllato corretto
-//check goalG11
+//check goalG11 // controllato corretto
 //check a // controllato corretto
 run show for 3
