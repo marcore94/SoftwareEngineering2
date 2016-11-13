@@ -393,13 +393,17 @@ fact discountOnlyOnRide
 	all reservation : Reservation | ( reservation.expired = True ) implies ( reservation.expirationFee.appliedDiscount = none and #(reservation.expirationFee.discounts) = 0 )
 }
 
-/*
+//prova soluzione
+fact pdd
+{
+	all re : Reservation | ( re.expired = False ) implies (  ( re.reservedCar.state = Reserved or ( one r : Ride | ( r.finished = False and r.reservation = re ) ) ) and not ( re.reservedCar.state = Reserved and ( one r : Ride | ( r.finished = False and r.reservation = re ) ) ) )
+}
+
 assert a
 {
 	//no n : Notification | (n.operator != none) and ( one sa : SafeArea | n.car.actualPosition in sa.positions) and (n.car.state = Maintenance)
-	no n : Notification | (n.operator != none) and (one r : Ride | r.reservation.reservedCar = n.car)
+	no car : Car | car.driver in Client and (not (carIsInUse[car])) and car.driver != none
 }
-*/
 
 pred carIsInsideSafeArea [car : Car]
 {
@@ -411,6 +415,17 @@ pred carIsInUse [car : Car]
 	one ride : Ride | ride.finished = False and ride.reservation.reservedCar = car
 }
 
+pred carNeedsMaintenance [ c : Car ]
+{
+	//provvisorio, suppone che la notifica venga creata sempre correttamente e che non rimanga in giro dopo che c'è stato l'intervento dell'operatore
+	one notification : Notification | notification.car = c
+}
+
+pred notificationIsPending [ notification : Notification ]
+{
+	notification.operator = none
+}
+
 assert goalG4
 {
 	no disjoint reservation1, reservation2 : Reservation | reservation1.expired = False and reservation2.expired = False and reservation1.client = reservation2.client
@@ -418,7 +433,7 @@ assert goalG4
 
 assert goalG5
 {
-	some reservation : Reservation | reservation.expired = True and reservation.reservedCar  = none
+	all reservation : Reservation | reservation.expired = True implies reservation.reservedCar  = none
 }
 
 assert goalG6
@@ -436,16 +451,20 @@ assert goalG9
 	all ride : Ride | ride.finished = True implies ( ( ( carIsInsideSafeArea [ ride.reservation.reservedCar ] ) or ( carIsInUse [ ride.reservation.reservedCar ] ) ) and not ( ( carIsInsideSafeArea [ ride.reservation.reservedCar ]  ) and ( carIsInUse [ ride.reservation.reservedCar ] ) ) )
 }
 
+/*
+DA RIVEDERE
 assert goalG11
 {
-	
-}
+	 all c : Car | ( carNeedsMaintenance [ c ] ) implies ( ( ( one o : Operator , notification : Notification | notification.operator != none and notification.operator = o and notification.car = c ) or ( one notification : Notification | notificationIsPending [ notification ] ) ) and not
+	( ( one o : Operator , notification : Notification | notification.operator != none and notification.operator = o and notification.car = c ) and ( one notification : Notification | notificationIsPending [ notification ] ) ) )
+}*/
 
 pred show{}
-/*check goalG4
-check goalG5
-check goalG6
-check goalG7
-check goalG9
-check goalG11*/
+//check goalG4 // controllato corretto
+//check goalG5 //controllato corretto
+//check goalG6 // controllato corretto
+//check goalG7 // controllato corretto
+//check goalG9 // controllato corretto
+//check goalG11
+//check a // controllato corretto
 run show for 3
