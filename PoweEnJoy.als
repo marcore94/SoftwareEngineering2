@@ -384,7 +384,7 @@ fact onlyOneDiscountApplied
 {
 	all re:Reservation, ri:Ride | re.expired = True implies 
 		re.expirationFee.discounts = none and
-		(#ri.payment.discounts >1 implies all d:Discount| d in ri.payment.discounts and  
+		(#ri.payment.discounts >0 implies all d:Discount| d in ri.payment.discounts and  
 		ri.payment.appliedDiscount.amount >= d.amount)
 }
 
