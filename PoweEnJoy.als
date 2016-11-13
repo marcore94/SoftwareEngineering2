@@ -311,6 +311,11 @@ fact carStateWhileInUse
 	( all ri : Ride | ri.finished = False implies ri.reservation.reservedCar.state = InUse )
 }
 
+fact existsRideOrReservedCarHasNotBeenPickedUpYet
+{
+	all re : Reservation | ( re.expired = False ) implies (  ( re.reservedCar.state = Reserved or ( one r : Ride | ( r.reservation = re ) ) ) and not ( re.reservedCar.state = Reserved and ( one r : Ride | ( r.reservation = re ) ) ) )
+}
+
 /*fact carStateWhileFree
 {
 	all c : Car | ( c.driver = none and ( one sa : SafeArea | c.actualPosition in sa.positions ) and ( no re : Reservation | re.reservedCar = c ) ) implies (c.state = Free)
@@ -340,8 +345,8 @@ sig Payment
 	appliedDiscount : lone Discount
 }
 {
-	appliedDiscount in discounts and
-	#discounts > 0 implies appliedDiscount != none
+	( appliedDiscount in discounts ) and
+	( #discounts > 0 implies appliedDiscount != none )
 }
 
 fact paymentIsUnique
@@ -459,6 +464,6 @@ check goalG7 // controllato corretto
 check goalG9 // controllato corretto
 check goalG10 // controllato corretto
 check goalG11 // controllato corretto
-check a // controllato corretto
+//check a // controllato corretto
 //check b // controllato corretto
 
