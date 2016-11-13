@@ -400,7 +400,7 @@ fact discountOnlyOnRide
 
 fact existsRideOrReservedCarHasNotBeenPickedUpYet
 {
-	all re : Reservation | ( re.expired = False ) implies (  ( re.reservedCar.state = Reserved or ( one r : Ride | ( r.finished = False and r.reservation = re ) ) ) and not ( re.reservedCar.state = Reserved and ( one r : Ride | ( r.finished = False and r.reservation = re ) ) ) )
+	all re : Reservation | ( re.expired = False ) implies (  ( re.reservedCar.state = Reserved or ( one r : Ride | ( r.reservation = re ) ) ) and not ( re.reservedCar.state = Reserved and ( one r : Ride | ( r.reservation = re ) ) ) )
 }
 
 assert a
@@ -408,6 +408,12 @@ assert a
 	//no n : Notification | (n.operator != none) and ( one sa : SafeArea | n.car.actualPosition in sa.positions) and (n.car.state = Maintenance)
 	no car : Car | car.driver in Client and (not (carIsInUse[car])) and car.driver != none
 }
+
+assert b
+{
+	all r : Ride | r.finished=False
+}
+
 
 pred carIsInsideSafeArea [car : Car]
 {
@@ -474,5 +480,5 @@ pred show{}
 //check goalG9 // controllato corretto
 //check goalG10 // controllato corretto
 //check goalG11 // controllato corretto
-//check a // controllato corretto
+check b // controllato corretto
 run show for 3
