@@ -393,8 +393,7 @@ fact discountOnlyOnRide
 	all reservation : Reservation | ( reservation.expired = True ) implies ( reservation.expirationFee.appliedDiscount = none and #(reservation.expirationFee.discounts) = 0 )
 }
 
-//prova soluzione
-fact pdd
+fact existsRideOrReservedCarHasNootBeenPickedUpYet
 {
 	all re : Reservation | ( re.expired = False ) implies (  ( re.reservedCar.state = Reserved or ( one r : Ride | ( r.finished = False and r.reservation = re ) ) ) and not ( re.reservedCar.state = Reserved and ( one r : Ride | ( r.finished = False and r.reservation = re ) ) ) )
 }
