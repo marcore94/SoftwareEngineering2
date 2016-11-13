@@ -393,13 +393,12 @@ fact discountOnlyOnRide
 	all reservation : Reservation | ( reservation.expired = True ) implies ( reservation.expirationFee.appliedDiscount = none and #(reservation.expirationFee.discounts) = 0 )
 }
 
-/*
-assert a
+
+/*assert a
 {
 	//no n : Notification | (n.operator != none) and ( one sa : SafeArea | n.car.actualPosition in sa.positions) and (n.car.state = Maintenance)
-	no n : Notification | (n.operator != none) and (one r : Ride | r.reservation.reservedCar = n.car)
-}
-*/
+	no car : Car | car.driver in Client and (not (carIsInUse[car])) and car.driver != none
+}*/
 
 pred carIsInsideSafeArea [car : Car]
 {
@@ -409,6 +408,17 @@ pred carIsInsideSafeArea [car : Car]
 pred carIsInUse [car : Car]
 {
 	one ride : Ride | ride.finished = False and ride.reservation.reservedCar = car
+}
+
+pred carNeedsMaintenance [ c : Car ]
+{
+	//provvisorio, suppone che la notifica venga creata sempre correttamente e che non rimanga in giro dopo che c'è stato l'intervento dell'operatore
+	one notification : Notification | notification.car = c
+}
+
+pred notificationIsPending [ notification : Notification ]
+{
+	notification.operator = none
 }
 
 assert goalG4
@@ -438,14 +448,16 @@ assert goalG9
 
 assert goalG11
 {
-	
+	 all c : Car | ( carNeedsMaintenance [ c ] ) implies ( ( ( one o : Operator , notification : Notification | notification.operator != none and notification.operator = o and notification.car = c ) or ( one notification : Notification | notificationIsPending [ notification ] ) ) and not
+	( ( one o : Operator , notification : Notification | notification.operator != none and notification.operator = o and notification.car = c ) and ( one notification : Notification | notificationIsPending [ notification ] ) ) )
 }
 
 pred show{}
-/*check goalG4
+check goalG4
 check goalG5
 check goalG6
 check goalG7
 check goalG9
-check goalG11*/
+check goalG11
+//check a
 run show for 3
