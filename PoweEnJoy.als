@@ -389,12 +389,6 @@ assert a
 	no car : Car | car.driver in Client and (not (carIsInUse[car])) and car.driver != none
 }
 
-fact existsRideOrReservedCarHasNotBeenPickedUpYet
-{
-  all re : Reservation | ( re.expired = False ) implies (  ( re.reservedCar.state = Reserved or ( one r : Ride | ( r.reservation = re ) ) ) and not ( re.reservedCar.state = Reserved and ( one r : Ride | ( r.reservation = re ) ) ) )
-}
-
-
 pred carIsInsideSafeArea [car : Car]
 {
 	one safeArea : SafeArea | InsideArea [car, safeArea]
@@ -433,7 +427,7 @@ assert goalG6
 
 assert goalG7
 {
-	all ride : Ride | ride.finished = True implies ( one payment : Payment | payment.client = ride.client )
+	all ride : Ride | ride.finished = True implies ( some payment : Payment | payment.client = ride.client )
 }
 
 assert goalG9
@@ -452,15 +446,19 @@ assert goalG11
 	all c : Car | ( carNeedsMaintenance [ c ] ) implies ( ( ( one o : Operator , notification : Notification | notification.operator != none and notification.operator = o and notification.car = c ) or ( one notification : Notification | notificationIsPending [ notification ] ) ) )
 }
 
-pred show{}
-//check goalG4 // controllato corretto
-//check goalG5 // controllato corretto
-//check goalG6 // controllato corretto
-//check goalG7 // controllato corretto
-//check goalG9 // controllato corretto
-//check goalG10 // controllato corretto
-//check goalG11 // controllato corretto
-//check a // controllato corretto
+pred show{
+#Ride>1
+#Notification>1
+#Client>3
+#Car>2}
 run show for 8
+check goalG4 // controllato corretto
+check goalG5 // controllato corretto
+check goalG6 // controllato corretto
+check goalG7 // controllato corretto
+check goalG9 // controllato corretto
+check goalG10 // controllato corretto
+check goalG11 // controllato corretto
+check a // controllato corretto
 //check b // controllato corretto
 
