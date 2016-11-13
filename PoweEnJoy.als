@@ -111,7 +111,7 @@ fact carNotDrivableDuringMaintenance
 {
 	all car:Car | ( car.state = Maintenance ) implies
 	( ( car.driver = none ) and
-	( ( car.batteryLevel = LowBatteryLevel or car.batteryLevel = EmptyBatteryLevel ) and ( car.charging = False ) ) and
+	( ( car.batteryLevel = LowBatteryLevel or car.batteryLevel = EmptyBatteryLevel ) ) and
 	( one safeArea : SafeArea | InsideArea[car, safeArea] ) )
 }
 
@@ -239,9 +239,10 @@ fact chargingCarsAreInTheChargingArea
 	all car : Car, chargingArea : ChargingArea | car in chargingArea.chargingCars implies InsideArea [car, chargingArea]
 }
 
-fact chargingCarsAreInChargingStatus
+fact chargingCarsInChargingAreaOrMaintenanceState
 {
-	all c : Car, ca: ChargingArea |( c in ca.chargingCars ) iff c.charging = True 
+	all c: Car | c.charging = True implies ( ( ( one ca: ChargingArea | c in ca.chargingCars ) or c.state = Maintenance ) and not 
+	( ( one ca: ChargingArea | c in ca.chargingCars ) and c.state = Maintenance ) )
 }
 
 sig Reservation
@@ -425,7 +426,7 @@ assert goalG7
 
 assert goalG9
 {
-	all ride : Ride | ride.finished = True implies ( ( ( carIsInsideSafeArea [ ride.reservation.reservedCar ] ) or ( carIsInUse [ ride.reservation.reservedCar ] ) ) and not ( ( carIsInsideSafeArea [ ride.reservation.reservedCar ]  ) and ( carIsInUse [ ride.reservation.reservedCar ] ) ) )
+	all c: Car | ( c.state = Free implies ( carIsInsideSafeArea [ c ] ) ) and ( c.charging = True implies ( (one ca: ChargingArea | c in ca.chargingCars) or c.state = Maintenance) )
 }
 
 assert goalG10
