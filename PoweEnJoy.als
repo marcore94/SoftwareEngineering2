@@ -388,6 +388,11 @@ fact onlyOneDiscountApplied
 		ri.payment.appliedDiscount.amount >= d.amount)
 }
 
+fact discountOnlyOnRide
+{
+	all reservation : Reservation | ( reservation.expired = True ) implies ( reservation.expirationFee.appliedDiscount = none and #(reservation.expirationFee.discounts) = 0 )
+}
+
 /*
 assert a
 {
@@ -396,6 +401,16 @@ assert a
 }
 */
 
+pred carIsInsideSafeArea [car : Car]
+{
+	one safeArea : SafeArea | InsideArea [car, safeArea]
+}
+
+pred carIsInUse [car : Car]
+{
+	one ride : Ride | ride.finished = False and ride.reservation.reservedCar = car
+}
+
 assert goalG4
 {
 	no disjoint reservation1, reservation2 : Reservation | reservation1.expired = False and reservation2.expired = False and reservation1.client = reservation2.client
@@ -403,10 +418,34 @@ assert goalG4
 
 assert goalG5
 {
-	some reservation : Reservation | reservation.expired = True
+	some reservation : Reservation | reservation.expired = True and reservation.reservedCar  = none
+}
+
+assert goalG6
+{
+	all ride : Ride | ( ride.finished = False and ( no notification : Notification | notification.car = ride.reservation.reservedCar ) ) implies ( ride.client = ride.reservation.client and ride.client = ride.reservation.reservedCar.driver )
+}
+
+assert goalG7
+{
+	all ride : Ride | ride.finished = True implies ( one payment : Payment | payment.client = ride.client )
+}
+
+assert goalG9
+{
+	all ride : Ride | ride.finished = True implies ( ( ( carIsInsideSafeArea [ ride.reservation.reservedCar ] ) or ( carIsInUse [ ride.reservation.reservedCar ] ) ) and not ( ( carIsInsideSafeArea [ ride.reservation.reservedCar ]  ) and ( carIsInUse [ ride.reservation.reservedCar ] ) ) )
+}
+
+assert goalG11
+{
+	
 }
 
 pred show{}
-check goalG4
+/*check goalG4
 check goalG5
+check goalG6
+check goalG7
+check goalG9
+check goalG11*/
 run show for 3
