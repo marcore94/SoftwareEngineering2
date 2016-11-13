@@ -389,6 +389,12 @@ assert a
 	no car : Car | car.driver in Client and (not (carIsInUse[car])) and car.driver != none
 }
 
+fact existsRideOrReservedCarHasNotBeenPickedUpYet
+{
+  all re : Reservation | ( re.expired = False ) implies (  ( re.reservedCar.state = Reserved or ( one r : Ride | ( r.reservation = re ) ) ) and not ( re.reservedCar.state = Reserved and ( one r : Ride | ( r.reservation = re ) ) ) )
+}
+
+
 pred carIsInsideSafeArea [car : Car]
 {
 	one safeArea : SafeArea | InsideArea [car, safeArea]
