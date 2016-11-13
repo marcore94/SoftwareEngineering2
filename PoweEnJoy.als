@@ -165,9 +165,14 @@ fact oneNotificationPerOperatorAndCar
 	all disjoint n1, n2: Notification | n1.operator != n2.operator and n1.car != n2.car
 }
 
+fact notificationOnlyWhenNeeded
+{
+	all c: Car | ((c.driver in Client and c.driver != none) or (c.state = Free) or (c.state = Reserved)) implies (no n: Notification | n.car = c)
+}
+
 fact operatorNotifiedWhenDrives
 {
-	all c: Car | (c.driver in Operator and c.driver != none) implies (one n: Notification | n.car = c and n.operator = c.driver)	
+	all c: Car | (c.driver in Operator and c.driver != none) implies (one n: Notification | n.car = c and n.operator = c.driver)
 }
 
 fact operatorNotifiedForManteinance
@@ -393,7 +398,7 @@ fact discountOnlyOnRide
 	all reservation : Reservation | ( reservation.expired = True ) implies ( reservation.expirationFee.appliedDiscount = none and #(reservation.expirationFee.discounts) = 0 )
 }
 
-fact existsRideOrReservedCarHasNootBeenPickedUpYet
+fact existsRideOrReservedCarHasNotBeenPickedUpYet
 {
 	all re : Reservation | ( re.expired = False ) implies (  ( re.reservedCar.state = Reserved or ( one r : Ride | ( r.finished = False and r.reservation = re ) ) ) and not ( re.reservedCar.state = Reserved and ( one r : Ride | ( r.finished = False and r.reservation = re ) ) ) )
 }
