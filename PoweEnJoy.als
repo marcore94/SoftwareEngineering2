@@ -391,7 +391,7 @@ fact discountOnlyOnRide
 
 /*fact existsRideOrReservedCarHasNotBeenPickedUpYet
 {
-	all re : Reservation | ( re.expired = False ) implies (  ( re.reservedCar.state = Reserved or ( one r : Ride | ( r.finished = False and r.reservation = re ) ) ) and not ( re.reservedCar.state = Reserved and ( one r : Ride | ( r.finished = False and r.reservation = re ) ) ) )
+	all re : Reservation | ( re.expired = False ) implies (  ( re.reservedCar.state = Reserved or ( one r : Ride | ( r.reservation = re ) ) ) and not ( re.reservedCar.state = Reserved and ( one r : Ride | ( r.reservation = re ) ) ) )
 }
 */
 assert a
@@ -473,3 +473,5 @@ pred show{}
 //check goalG11 // controllato corretto
 //check a // controllato corretto
 run show for 8
+//check b // controllato corretto
+
