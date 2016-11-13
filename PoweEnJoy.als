@@ -395,6 +395,18 @@ assert a
 	no n : Notification | (n.operator != none) and (one r : Ride | r.reservation.reservedCar = n.car)
 }
 */
+
+assert goalG4
+{
+	no disjoint reservation1, reservation2 : Reservation | reservation1.expired = False and reservation2.expired = False and reservation1.client = reservation2.client
+}
+
+assert goalG5
+{
+	some reservation : Reservation | expired = True
+}
+
 pred show{}
-//check a
+check goalG4
+check goalG5
 run show for 3
