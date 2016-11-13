@@ -455,6 +455,12 @@ assert goalG9
 	all ride : Ride | ride.finished = True implies ( ( ( carIsInsideSafeArea [ ride.reservation.reservedCar ] ) or ( carIsInUse [ ride.reservation.reservedCar ] ) ) and not ( ( carIsInsideSafeArea [ ride.reservation.reservedCar ]  ) and ( carIsInUse [ ride.reservation.reservedCar ] ) ) )
 }
 
+assert goalG10
+{
+	( all reservation : Reservation | reservation.expired = True implies reservation.expirationFee != none ) and
+	( all ride : Ride | ride.finished = True implies ( ride.payment.appliedDiscount in ride.payment.discounts ) )
+}
+
 /*
 DA RIVEDERE
 assert goalG11
@@ -465,10 +471,11 @@ assert goalG11
 
 pred show{}
 //check goalG4 // controllato corretto
-//check goalG5 //controllato corretto
+//check goalG5 // controllato corretto
 //check goalG6 // controllato corretto
 //check goalG7 // controllato corretto
 //check goalG9 // controllato corretto
+//check goalG10 // controllato corretto
 //check goalG11
 //check a // controllato corretto
 run show for 3
