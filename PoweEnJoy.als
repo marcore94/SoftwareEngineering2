@@ -317,12 +317,7 @@ fact carStateWhileInUse
 }*/
 
 abstract sig Discount
-{
-	amount : one Int	
-}
-{
-	amount >0 and amount <100
-}
+{}
 
 one sig MoreThan2Passengers extends Discount
 {}
@@ -335,22 +330,8 @@ fact moreThan2PassengersCondition
 one sig EnoughBatteryLeft extends Discount
 {}
 
-fact enoughBatteryLeftCondition
-{
-	all ri: Ride, eBL: EnoughBatteryLeft | eBL in ri.payment.discounts iff 
-	(ri.finished = True and ri.reservation.reservedCar.batteryLevel in
-	(MediumHighBatteryLevel + HighBatteryLevel))
-}
-
 one sig CarPutInCharge extends Discount
 {}
-
-fact carPutInChargeCondition
-{
-	all ri:Ride, cPC: CarPutInCharge | cPC in ri.payment.discounts iff
-	(ri.finished = True and one ca:ChargingArea | InsideArea[ri.reservation.reservedCar, ca] and 
-	ri.reservation.reservedCar.charging = True)
-}
 
 sig Payment
 {
@@ -359,7 +340,8 @@ sig Payment
 	appliedDiscount : lone Discount
 }
 {
-	appliedDiscount in discounts
+	appliedDiscount in discounts and
+	#discounts > 0 implies appliedDiscount != none
 }
 
 fact paymentIsUnique
@@ -387,27 +369,42 @@ fact clientThatReservesPay
 
 fact onlyOneDiscountApplied
 {
-	all re:Reservation, ri:Ride | re.expired = True implies 
+	all re:Reservation, ri:Ride, d,d1: Discount | re.expired = True implies 
 		re.expirationFee.discounts = none and
-		(#ri.payment.discounts >0 implies all d:Discount| d in ri.payment.discounts and  
-		ri.payment.appliedDiscount.amount >= d.amount)
+		(#ri.payment.discounts = 1 implies (ri.payment.appliedDiscount = d and d in ri.payment.discounts)) and
+		(#ri.payment.discounts >1 implies 
+		((d=CarPutInCharge and d in ri.payment.discounts) implies ri.payment.appliedDiscount = d) and
+		((d=CarPutInCharge and d1=EnoughBatteryLeft and d not in ri.payment.discounts and d1 in ri.payment.discounts)
+			implies ri.payment.appliedDiscount = d1) )
 }
+
+assert noRide
+{
+	no r:Ride | r.finished = True
+}
+//check noRide
 
 fact discountOnlyOnRide
 {
 	all reservation : Reservation | ( reservation.expired = True ) implies ( reservation.expirationFee.appliedDiscount = none and #(reservation.expirationFee.discounts) = 0 )
 }
 
-fact existsRideOrReservedCarHasNotBeenPickedUpYet
+/*fact existsRideOrReservedCarHasNotBeenPickedUpYet
 {
 	all re : Reservation | ( re.expired = False ) implies (  ( re.reservedCar.state = Reserved or ( one r : Ride | ( r.finished = False and r.reservation = re ) ) ) and not ( re.reservedCar.state = Reserved and ( one r : Ride | ( r.finished = False and r.reservation = re ) ) ) )
 }
-
+*/
 assert a
 {
 	//no n : Notification | (n.operator != none) and ( one sa : SafeArea | n.car.actualPosition in sa.positions) and (n.car.state = Maintenance)
 	no car : Car | car.driver in Client and (not (carIsInUse[car])) and car.driver != none
 }
+
+assert b
+{
+	no p:Payment | p.appliedDiscount !=CarPutInCharge and p.discounts!=none and one d:CarPutInCharge | d in p.discounts
+}
+check b
 
 pred carIsInsideSafeArea [car : Car]
 {
@@ -475,4 +472,4 @@ pred show{}
 //check goalG10 // controllato corretto
 //check goalG11 // controllato corretto
 //check a // controllato corretto
-run show for 3
+run show for 8
